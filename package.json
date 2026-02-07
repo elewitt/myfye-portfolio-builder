@@ -1,0 +1,41 @@
+{
+  "name": "myfye-portfolio-builder",
+  "version": "1.0.0",
+  "description": "AI-powered autonomous portfolio builder SDK for Myfye on Solana",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "lint": "eslint . --ext .ts",
+    "example": "npx tsx examples/build-portfolio.ts"
+  },
+  "keywords": [
+    "solana",
+    "defi",
+    "portfolio",
+    "ai-agent",
+    "myfye",
+    "jupiter",
+    "dinari",
+    "rwa"
+  ],
+  "author": "Myfye Portfolio Builder Agent",
+  "license": "MIT",
+  "dependencies": {
+    "@dinari/api-sdk": "^0.4.0",
+    "@solana/spl-token": "^0.4.9",
+    "@solana/web3.js": "^1.98.0",
+    "axios": "^1.7.9",
+    "bs58": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

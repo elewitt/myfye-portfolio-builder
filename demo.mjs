@@ -6,10 +6,16 @@
 
 import { Connection, PublicKey } from '@solana/web3.js';
 
-const WALLET = process.env.WALLET_ADDRESS || "5TXSHinHyL3SCzjnGwTikNyaPpcscY6rF4pj1gE82Xif";
-const WALLET_ID = process.env.WALLET_ID || "";
-const PRIVY_APP_ID = process.env.PRIVY_APP_ID || "cm4ucmtf8091nkywlgy9os418";
-const PRIVY_SECRET = process.env.PRIVY_APP_SECRET || "";
+const WALLET = process.env.WALLET_ADDRESS;
+const WALLET_ID = process.env.WALLET_ID;
+const PRIVY_APP_ID = process.env.PRIVY_APP_ID;
+const PRIVY_SECRET = process.env.PRIVY_APP_SECRET;
+
+if (!WALLET || !PRIVY_APP_ID) {
+  console.error("Required environment variables: WALLET_ADDRESS, PRIVY_APP_ID");
+  console.error("Optional: WALLET_ID, PRIVY_APP_SECRET (needed for trades)");
+  process.exit(1);
+}
 
 const connection = new Connection("https://api.mainnet-beta.solana.com");
 

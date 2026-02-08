@@ -9,15 +9,16 @@ import Anthropic from '@anthropic-ai/sdk';
 import { Connection, PublicKey, VersionedTransaction, TransactionMessage, TransactionInstruction } from '@solana/web3.js';
 import * as readline from 'readline';
 
-// Configuration
+// Configuration - all from environment variables
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-const WALLET = "5TXSHinHyL3SCzjnGwTikNyaPpcscY6rF4pj1gE82Xif";
-const WALLET_ID = "w11rputgq5nvis6rk8ibyog3";
-const PRIVY_APP_ID = "cm4ucmtf8091nkywlgy9os418";
-const PRIVY_SECRET = process.env.PRIVY_APP_SECRET || "325QfRWQezmwLxrvw9C6q6hw8cbf7ZMv6iwM1y1ZNezSKuFqKjQeQY62BcwZGtxhGoykdzmBB1DKiVmq1nijpWrL";
+const WALLET = process.env.WALLET_ADDRESS;
+const WALLET_ID = process.env.WALLET_ID;
+const PRIVY_APP_ID = process.env.PRIVY_APP_ID;
+const PRIVY_SECRET = process.env.PRIVY_APP_SECRET;
 
-if (!ANTHROPIC_API_KEY) {
-  console.error("Error: ANTHROPIC_API_KEY environment variable required");
+if (!ANTHROPIC_API_KEY || !WALLET || !WALLET_ID || !PRIVY_APP_ID || !PRIVY_SECRET) {
+  console.error("Required environment variables:");
+  console.error("  ANTHROPIC_API_KEY, WALLET_ADDRESS, WALLET_ID, PRIVY_APP_ID, PRIVY_APP_SECRET");
   process.exit(1);
 }
 

@@ -10,25 +10,26 @@ if (!WALLET || !WALLET_ID || !PRIVY_APP_ID || !PRIVY_SECRET) {
   process.exit(1);
 }
 
-const USDY_MINT = "A1KLoBrKBde8Ty9qtNQUtq3C2ortoC3u7twggz7sEto6";
 const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+const USDY_MINT = "A1KLoBrKBde8Ty9qtNQUtq3C2ortoC3u7twggz7sEto6";
+const SPYx_MINT = "XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W";
+const QQQx_MINT = "Xs8S1uUs1zvS2p7iwtsG3b6fkhpvmwz4GYU3gWAmWHZ";
+const EURC_MINT = "HzwqbKZw8HxMN6bF2yFZNrht3c2iXXzpKcFu7uBEDKtr";
 
 const connection = new Connection("https://api.mainnet-beta.solana.com");
 
-async function main() {
-  const AMOUNT = "640773"; // All remaining USDY
-  
-  console.log("Getting quote for USDY → USDC...");
+async function swap(inputMint, outputMint, amount, label) {
+  console.log(`\n${label}: Getting quote...`);
   const quoteRes = await fetch(
-    `https://lite-api.jup.ag/swap/v1/quote?inputMint=${USDY_MINT}&outputMint=${USDC_MINT}&amount=${AMOUNT}&slippageBps=300&maxAccounts=15`
+    `https://lite-api.jup.ag/swap/v1/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=300&maxAccounts=20`
   );
   const quote = await quoteRes.json();
-  
+
   if (quote.error || !quote.outAmount) {
     console.error("Quote error:", quote.error || "No route found");
-    return;
+    return null;
   }
-  console.log(`Swapping ${AMOUNT} USDY for ${quote.outAmount} USDC`);
+  console.log(`Swapping ${amount} for ${quote.outAmount}`);
 
   const swapRes = await fetch("https://lite-api.jup.ag/swap/v1/swap-instructions", {
     method: "POST",
@@ -41,14 +42,14 @@ async function main() {
     })
   });
   const instructions = await swapRes.json();
-  
+
   if (instructions.error) {
-    console.error("Error:", instructions.error);
-    return;
+    console.error("Swap instructions error:", instructions.error);
+    return null;
   }
 
   const allInstructions = [];
-  
+
   for (const ix of instructions.computeBudgetInstructions || []) {
     allInstructions.push(new TransactionInstruction({
       programId: new PublicKey(ix.programId),
@@ -56,7 +57,7 @@ async function main() {
       data: Buffer.from(ix.data, 'base64')
     }));
   }
-  
+
   for (const ix of instructions.setupInstructions || []) {
     allInstructions.push(new TransactionInstruction({
       programId: new PublicKey(ix.programId),
@@ -64,13 +65,13 @@ async function main() {
       data: Buffer.from(ix.data, 'base64')
     }));
   }
-  
+
   allInstructions.push(new TransactionInstruction({
     programId: new PublicKey(instructions.swapInstruction.programId),
     keys: instructions.swapInstruction.accounts.map(a => ({ pubkey: new PublicKey(a.pubkey), isSigner: a.isSigner, isWritable: a.isWritable })),
     data: Buffer.from(instructions.swapInstruction.data, 'base64')
   }));
-  
+
   if (instructions.cleanupInstruction) {
     allInstructions.push(new TransactionInstruction({
       programId: new PublicKey(instructions.cleanupInstruction.programId),
@@ -85,10 +86,11 @@ async function main() {
     recentBlockhash: blockhash,
     instructions: allInstructions
   }).compileToV0Message();
-  
+
   const tx = new VersionedTransaction(messageV0);
   const serializedTx = Buffer.from(tx.serialize()).toString('base64');
-  
+
+  console.log("Signing...");
   const authHeader = Buffer.from(`${PRIVY_APP_ID}:${PRIVY_SECRET}`).toString('base64');
   const signRes = await fetch(`https://api.privy.io/v1/wallets/${WALLET_ID}/rpc`, {
     method: "POST",
@@ -102,17 +104,43 @@ async function main() {
       params: { transaction: serializedTx, encoding: "base64" }
     })
   });
-  
+
   const signResult = await signRes.json();
   if (signResult.error) {
     console.error("Sign error:", JSON.stringify(signResult.error));
-    return;
+    return null;
   }
 
+  console.log("Submitting...");
   const signedTxBytes = Buffer.from(signResult.data.signed_transaction, 'base64');
   const txSig = await connection.sendRawTransaction(signedTxBytes, { skipPreflight: true });
   console.log("SUCCESS:", txSig);
-  console.log("https://solscan.io/tx/" + txSig);
+  return txSig;
+}
+
+async function main() {
+  // 10 USDC = 10,000,000 raw units (6 decimals)
+  // Split into 4 equal parts: 2,500,000 each
+  const portion = "2500000";
+
+  console.log("Diversifying 10 USDC into 4 equal portions...\n");
+
+  // Swap 1: USDC → USDY
+  await swap(USDC_MINT, USDY_MINT, portion, "USDC → USDY ($2.50)");
+  await new Promise(r => setTimeout(r, 1500));
+
+  // Swap 2: USDC → SPYx
+  await swap(USDC_MINT, SPYx_MINT, portion, "USDC → SPYx ($2.50)");
+  await new Promise(r => setTimeout(r, 1500));
+
+  // Swap 3: USDC → QQQx
+  await swap(USDC_MINT, QQQx_MINT, portion, "USDC → QQQx ($2.50)");
+  await new Promise(r => setTimeout(r, 1500));
+
+  // Swap 4: USDC → EURC
+  await swap(USDC_MINT, EURC_MINT, portion, "USDC → EURC ($2.50)");
+
+  console.log("\nDone! Portfolio diversified.");
 }
 
 main().catch(console.error);

@@ -305,6 +305,10 @@ export { MarketDataClient, createMarketDataClient } from './market.js';
 export { TradingClient, createTradingClient } from './trading.js';
 export { PortfolioClient, createPortfolioClient } from './portfolio.js';
 
+// Agent Wallet - Simple interface for AI agents
+export { AgentWallet, createAgentWallet, TOKENS } from './agent-wallet.js';
+export type { AgentWalletConfig, Wallet, SwapResult as AgentSwapResult, TokenBalance as AgentTokenBalance, Portfolio as AgentPortfolio } from './agent-wallet.js';
+
 // Convenience exports
 export { COMMON_TOKENS };
 
